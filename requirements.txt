@@ -1,4 +1,4 @@
 #keras_applications 1.0.8 is buggy because of global MEAN constant. Choose 1.0.7 or the commit below
 -e git+https://github.com/keras-team/keras-applications.git@bc89834ed36935ab4a4994446e34ff81c0d8e1b7#egg=keras-applications
 image-classifiers==1.0.0
-efficientnet==1.1.0
+efficientnet==1.1.1
