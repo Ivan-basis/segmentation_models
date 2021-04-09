@@ -57,7 +57,6 @@ def DecoderUpsamplingX2Block(filters, stage, use_batchnorm=False):
         x = layers.UpSampling2D(size=2, name=up_name)(input_tensor)
 
         if skip is not None:
-            #skip = layers.Dropout(0.3)(skip)
             x = layers.Concatenate(axis=concat_axis, name=concat_name)([x, skip])
 
         x = Conv3x3BnReLU(filters, use_batchnorm, name=conv1_name)(x)
@@ -115,6 +114,7 @@ def build_unet(
         n_upsample_blocks=5,
         classes=1,
         activation='sigmoid',
+        activation_dtype=None,
         use_batchnorm=True,
         center_dropout=0.0,
 ):
@@ -128,7 +128,7 @@ def build_unet(
     # Dropout between encoder/decoder
     if center_dropout:
       x = layers.Dropout(center_dropout)(x)
-    
+
     # add center block if last encoder operation was maxpooling (for vgg models)
     if isinstance(backbone.layers[-1], layers.MaxPooling2D):
         x = Conv3x3BnReLU(512, use_batchnorm, name='center_block1')(x)
@@ -153,7 +153,11 @@ def build_unet(
         kernel_initializer='glorot_uniform',
         name='final_conv',
     )(x)
-    x = layers.Activation(activation, name=activation)(x)
+    if activation_dtype is None:
+        x = layers.Activation(activation, name=activation)(x)
+    else:
+        x = layers.Activation(activation, name=activation,
+                              dtype=activation_dtype)(x)
 
     # create keras model instance
     model = models.Model(input_, x)
@@ -170,6 +174,7 @@ def Unet(
         input_shape=(None, None, 3),
         classes=1,
         activation='sigmoid',
+        activation_dtype=None,
         weights=None,
         encoder_weights='imagenet',
         encoder_freeze=False,
@@ -191,6 +196,8 @@ def Unet(
         classes: a number of classes for output (output shape - ``(h, w, classes)``).
         activation: name of one of ``keras.activations`` for last model layer
             (e.g. ``sigmoid``, ``softmax``, ``linear``).
+        activation_dtype: Optional type parameter to force activations
+            to be treated in certain type. Used when mixed_precision is enabled.
         weights: optional, path to model weights.
         encoder_weights: one of ``None`` (random initialization), ``imagenet`` (pre-training on ImageNet).
         encoder_freeze: if ``True`` set all layers of encoder (backbone model) as non-trainable. If a float, freezes
@@ -246,6 +253,7 @@ def Unet(
         decoder_filters=decoder_filters,
         classes=classes,
         activation=activation,
+        activation_dtype=activation_dtype,
         n_upsample_blocks=len(decoder_filters),
         use_batchnorm=decoder_use_batchnorm,
         center_dropout=center_dropout,
