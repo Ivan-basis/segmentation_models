@@ -27,34 +27,10 @@ VERSION = None
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-def refactor_requirements(rec_list):
-    """
-    Replaces https:// .git requirements' lines with package-name==version
-    """
-    for line in rec_list:
-        line = line.strip()
-        # let's also ignore empty lines and comments
-        if not line or line.startswith('#'):
-            continue
-        if 'https://' in line:
-            tail = line.rsplit('/', 1)[1]
-            tail = tail.split('#')[0]
-            parts = tail.rsplit('@', 1)
-            name = parts[0].replace('.git', '')
-            vers = parts[1] if len(parts)>1 else ''
-            vers = vers if len(vers)<16 else '' # long branch name should not be used as version
-            if vers:
-                line = '=='.join([name, vers])
-            else:
-                line = name
-        packages.append(line)
-    return packages
-
 # What packages are required for this module to be executed?
 try:
     with open(os.path.join(here, 'requirements.txt'), encoding='utf-8') as f:
         REQUIRED = f.read().split('\n')
-        REQUIRED = refactor_requirements(REQUIRED)
 except:
     REQUIRED = []
 
