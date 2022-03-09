@@ -31,7 +31,6 @@ def refactor_requirements(rec_list):
     """
     Replaces https:// .git requirements' lines with package-name==version
     """
-    packages = []
     for line in rec_list:
         line = line.strip()
         # let's also ignore empty lines and comments
